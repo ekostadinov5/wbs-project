@@ -1,0 +1,69 @@
+
+###
+
+GET http://localhost:8080/api/foaf/profile/uri
+personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
+
+###
+
+GET http://localhost:8080/api/foaf/profile
+email:mailto:ekostadinov5@gmail.com
+hashedEmail:0b742b32a87955df1e1808c644e4847d2c7825db
+
+###
+
+GET http://localhost:8080/api/foaf/profile/friend
+friendProfileUris:https://mjovanovik.com/foaf.ttl
+
+###
+
+POST http://localhost:8080/api/foaf/profile
+email:ekostadinov5@gmail.com
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db> a foaf:PersonalProfileDocument;
+    foaf:maker <http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me>;
+    foaf:primaryTopic <http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me>.
+<http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me> a foaf:Person;
+    foaf:firstName "Evgenij";
+    foaf:lastName "Kostadinov";
+    foaf:mbox_sha1sum "0b742b32a87955df1e1808c644e4847d2c7825db".
+
+
+###
+
+PATCH http://localhost:8080/api/foaf/profile
+email:ekostadinov5@gmail.com
+personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db> a foaf:PersonalProfileDocument;
+    foaf:maker <http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me>;
+    foaf:primaryTopic <http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me>.
+<http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me> a foaf:Person;
+    foaf:firstName "Evgenij";
+    foaf:lastName "Kostadinov";
+    foaf:gender "Male";
+    foaf:mbox_sha1sum "0b742b32a87955df1e1808c644e4847d2c7825db".
+
+###
+
+DELETE http://localhost:8080/api/foaf/profile
+email:ekostadinov5@gmail.com
+personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
+
+###
+
+GET http://localhost:8080/api/foaf/profile/confirm?token=token
+
+###
+
+GET http://localhost:8080/api/foaf/profile/print
+
+###
