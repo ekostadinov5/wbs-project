@@ -15,9 +15,24 @@ public class EmailSenderServiceImpl implements EmailSenderService {
     }
 
     @Override
-    @Async
+    public SimpleMailMessage composeEmail(String to, String from, String subject, String text) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(to);
+        mailMessage.setFrom(from);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(text);
+        return mailMessage;
+    }
+
+    @Override
     public void sendEmail(SimpleMailMessage email) {
         javaMailSender.send(email);
+    }
+
+    @Override
+    public void composeAndSendEmail(String to, String from, String subject, String text) {
+        SimpleMailMessage mailMessage = composeEmail(to, from, subject, text);
+        this.sendEmail(mailMessage);
     }
 
 }

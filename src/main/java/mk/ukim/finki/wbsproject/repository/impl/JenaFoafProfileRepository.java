@@ -1,8 +1,13 @@
 package mk.ukim.finki.wbsproject.repository.impl;
 
 import mk.ukim.finki.wbsproject.model.dto.PersonDto;
+import mk.ukim.finki.wbsproject.model.exception.PersonalProfileDocumentNotFoundException;
 import mk.ukim.finki.wbsproject.repository.FoafProfileRepository;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
@@ -10,11 +15,13 @@ import org.apache.jena.rdf.model.impl.ResourceImpl;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Repository;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
@@ -98,91 +105,89 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
         return personDto;
     }
 
-    private Statement getFirstNameStatement(Resource friend) {
-        Statement firstNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "firstName"));
-        if (firstNameStatement == null) {
+    private String getFirstName(Resource friend) {
+        Statement firstNameStatement = null;
+        if (friend.hasProperty(new PropertyImpl(FOAF_NS + "firstName"))) {
+            firstNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "firstName"));
+        } else if (friend.hasProperty(new PropertyImpl(FOAF_NS + "givenName"))) {
             firstNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "givenName"));
-        }
-        if (firstNameStatement == null) {
+        } else if (friend.hasProperty(new PropertyImpl(FOAF_NS + "givenname"))) {
             firstNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "givenname"));
         }
-        return firstNameStatement;
+        return firstNameStatement != null ? firstNameStatement.getObject().toString() : null;
     }
 
-    private Statement getLastNameStatement(Resource friend) {
-        Statement lastNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "lastName"));
-        if (lastNameStatement == null) {
+    private String getLastName(Resource friend) {
+        Statement lastNameStatement = null;
+        if (friend.hasProperty(new PropertyImpl(FOAF_NS + "lastName"))) {
+            lastNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "lastName"));
+        } else if (friend.hasProperty(new PropertyImpl(FOAF_NS + "familyName"))) {
             lastNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "familyName"));
-        }
-        if (lastNameStatement == null) {
+        } else if (friend.hasProperty(new PropertyImpl(FOAF_NS + "family_name"))) {
             lastNameStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "family_name"));
         }
-        return lastNameStatement;
+        return lastNameStatement != null ? lastNameStatement.getObject().toString() : null;
+    }
+
+    private String getImage(Resource friend) {
+        Statement imageStatement = null;
+        if (friend.hasProperty(new PropertyImpl(FOAF_NS + "img"))) {
+            imageStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "img"));
+        } else if (friend.hasProperty(new PropertyImpl(FOAF_NS + "depiction"))) {
+            imageStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "depiction"));
+        }
+        return imageStatement != null ? imageStatement.getObject().toString() : null;
     }
 
     private PersonDto.Friend mapRdfToFriend(String friendProfileUri) {
         Model friendModel = ModelFactory.createDefaultModel();
         try {
-            RDFParser.source(friendProfileUri)
-                    .httpAccept("text/turtle")
-                    .parse(friendModel.getGraph());
-        } catch (Exception e1) {
-            e1.printStackTrace();
-            try {
-                friendModel.read(friendProfileUri, "", "TTL");
-            } catch (Exception e2) {
-                e2.printStackTrace();
-            }
+            friendModel.read(friendProfileUri, "", "TTL");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-//        String queryString = String.format(
-//                "SELECT DISTINCT ?f WHERE { <%s> <%s> ?f . }",
-//                friendProfileUri,
-//                FOAF_NS + "primaryTopic"
-//        );
-//        Query query = QueryFactory.create(queryString);
-//        Resource friend = null;
-//        try {
-//            QueryExecution execution = QueryExecutionFactory.create(query, friendModel);
-//            ResultSet rs = execution.execSelect();
-//            friend = rs.nextSolution().getResource("f");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-        StmtIterator iterator = friendModel.listStatements(
-                new SimpleSelector(
-                        null,
-                        new PropertyImpl(FOAF_NS + "primaryTopic"),
-                        (RDFNode) null
-                )
-        );
         Resource friend = null;
-        if (iterator.hasNext()) {
-            friend = iterator.nextStatement().getResource();
+        NodeIterator nodeIterator = friendModel.listObjectsOfProperty(new PropertyImpl(FOAF_NS + "primaryTopic"));
+        if (nodeIterator.hasNext()) {
+            friend = nodeIterator.nextNode().asResource();
         } else {
-            iterator = friendModel.listStatements(
-                    new SimpleSelector(null, RDF.type, new ResourceImpl(FOAF_NS + "Person"))
-            );
-            if (iterator.hasNext()) {
-                friend = iterator.nextStatement().getSubject();
+            ResIterator resIterator = friendModel
+                    .listSubjectsWithProperty(RDF.type, new ResourceImpl(FOAF_NS + "Person"));
+            if (resIterator.hasNext()) {
+                friend = resIterator.nextResource();
             }
         }
-
-        Statement firstNameStatement = null, lastNameStatement = null, imageStatement = null;
+        String firstName = null, lastName = null, image = null;
         if (friend != null) {
-            firstNameStatement = getFirstNameStatement(friend);
-            lastNameStatement = getLastNameStatement(friend);
-            imageStatement = friend.getProperty(new PropertyImpl(FOAF_NS + "img"));
+            firstName = getFirstName(friend);
+            lastName = getLastName(friend);
+            image = getImage(friend);
         }
-        String firstName = firstNameStatement != null ? firstNameStatement.getObject().toString() : null;
-        String lastName = lastNameStatement != null ? lastNameStatement.getObject().toString() : null;
-        String image = imageStatement != null ? imageStatement.getObject().toString() : null;
         return new PersonDto.Friend(friendProfileUri, firstName, lastName, image);
     }
 
+    private void insertRdfIntoModel(String rdf, Model datasetModel) throws IOException {
+        InputStream in = IOUtils.toInputStream(rdf,"UTF-8");
+        Model model = ModelFactory.createDefaultModel();
+        model.read(in, "", "TTL");
+        datasetModel.add(model);
+    }
+
+    private void deletePersonFromModel(Resource personUriResource, Resource personalProfileDocumentUriResource,
+                                       Model datasetModel) {
+        datasetModel.listStatements(
+                new SimpleSelector(
+                        personUriResource,
+                        new PropertyImpl(FOAF_NS + "knows"),
+                        (RDFNode) null
+                )
+        ).forEachRemaining(s -> datasetModel.removeAll(s.getResource(), null, null));
+        datasetModel.removeAll(personUriResource, null, null);
+        datasetModel.removeAll(personalProfileDocumentUriResource, null, null);
+    }
+
     @Override
-    public Optional<String> getPersonalProfileDocumentModel(String personalProfileDocumentUri) {
-        Model model;
+    public Optional<String> getPersonalProfileDocument(String personalProfileDocumentUri) {
         String result = null;
         String personUri = personalProfileDocumentUri + "#me";
         String queryString = String.format("DESCRIBE <%s> <%s>", personalProfileDocumentUri, personUri);
@@ -190,9 +195,14 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
         this.dataset.begin(ReadWrite.READ);
         try (final ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             QueryExecution execution = QueryExecutionFactory.create(query, this.dataset);
-            model = execution.execDescribe();
+            Model model = execution.execDescribe();
+            if (model.isEmpty()) {
+                throw new PersonalProfileDocumentNotFoundException();
+            }
             RDFDataMgr.write(os, model, RDFFormat.TURTLE_PRETTY);
             result = os.toString();
+        } catch (PersonalProfileDocumentNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -202,7 +212,7 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
     }
 
     @Override
-    public Optional<PersonDto> getPersonByUri(String personUri) {
+    public Optional<PersonDto> getPerson(String personUri) {
         PersonDto personDto = null;
         this.dataset.begin(ReadWrite.READ);
         try {
@@ -210,52 +220,6 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
             Query query = QueryFactory.create(queryString);
             QueryExecution execution = QueryExecutionFactory.create(query, this.dataset);
             ResultSet rs = execution.execSelect();
-            if (rs.hasNext()) {
-                personDto = mapRdfToPerson(rs);
-                personDto.setUri(personUri);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            this.dataset.end();
-        }
-        return Optional.ofNullable(personDto);
-    }
-
-    @Override
-    public Optional<PersonDto> getPerson(String email, String hashedEmail) {
-        PersonDto personDto = null;
-        String queryString1 = String.format(
-                "SELECT ?s WHERE { ?s <%s> <%s> . }",
-                FOAF_NS + "mbox",
-                email
-        );
-        String queryString2 = String.format(
-                "SELECT ?s WHERE { ?s <%s> \"%s\" . }",
-                FOAF_NS + "mbox_sha1sum",
-                hashedEmail
-        );
-        Query query1 = QueryFactory.create(queryString1);
-        Query query2 = QueryFactory.create(queryString2);
-        this.dataset.begin(ReadWrite.READ);
-        try {
-            QueryExecution execution = QueryExecutionFactory.create(query1, this.dataset);
-            ResultSet rs = execution.execSelect();
-            String personUri = "";
-            if (rs.hasNext()) {
-                personUri = rs.nextSolution().get("s").toString();
-            }
-            if (personUri.isEmpty()) {
-                execution = QueryExecutionFactory.create(query2, this.dataset);
-                rs = execution.execSelect();
-                if (rs.hasNext()) {
-                    personUri = rs.nextSolution().get("s").toString();
-                }
-            }
-            String queryString3 = String.format("SELECT ?p ?o WHERE { <%s> ?p ?o . }", personUri);
-            Query query3 = QueryFactory.create(queryString3);
-            execution = QueryExecutionFactory.create(query3, this.dataset);
-            rs = execution.execSelect();
             if (rs.hasNext()) {
                 personDto = mapRdfToPerson(rs);
                 personDto.setUri(personUri);
@@ -280,10 +244,7 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
         this.dataset.begin(ReadWrite.WRITE);
         try {
             Model datasetModel = this.dataset.getDefaultModel();
-            InputStream in = IOUtils.toInputStream(rdf,"UTF-8");
-            Model model = ModelFactory.createDefaultModel();
-            model.read(in, "", "TTL");
-            datasetModel.add(model);
+            this.insertRdfIntoModel(rdf, datasetModel);
             this.dataset.commit();
         } catch(Exception e) {
             e.printStackTrace();
@@ -295,21 +256,12 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
     @Override
     public void updatePerson(String personUri, String rdf) {
         Resource personUriResource = new ResourceImpl(personUri);
+        Resource personalProfileDocumentUriResource = new ResourceImpl(personUri.substring(0, personUri.length() - 3));
         this.dataset.begin(ReadWrite.WRITE);
         try {
             Model datasetModel = dataset.getDefaultModel();
-            datasetModel.listStatements(
-                    new SimpleSelector(
-                            personUriResource,
-                            new PropertyImpl(FOAF_NS + "knows"),
-                            (RDFNode) null
-                    )
-            ).forEachRemaining(s -> datasetModel.removeAll(s.getResource(), null, null));
-            datasetModel.removeAll(personUriResource, null, null);
-            InputStream in = IOUtils.toInputStream(rdf,"UTF-8");
-            Model model = ModelFactory.createDefaultModel();
-            model.read(in, "", "TTL");
-            datasetModel.add(model);
+            this.deletePersonFromModel(personUriResource, personalProfileDocumentUriResource, datasetModel);
+            this.insertRdfIntoModel(rdf, datasetModel);
             dataset.commit();
         } catch(Exception e) {
             e.printStackTrace();
@@ -325,15 +277,7 @@ public class JenaFoafProfileRepository implements FoafProfileRepository {
         this.dataset.begin(ReadWrite.WRITE);
         try {
             Model datasetModel = dataset.getDefaultModel();
-            datasetModel.listStatements(
-                    new SimpleSelector(
-                            personUriResource,
-                            new PropertyImpl(FOAF_NS + "knows"),
-                            (RDFNode) null
-                    )
-            ).forEachRemaining(s -> datasetModel.removeAll(s.getResource(), null, null));
-            datasetModel.removeAll(personUriResource, null, null);
-            datasetModel.removeAll(personalProfileDocumentUriResource, null, null);
+            this.deletePersonFromModel(personUriResource, personalProfileDocumentUriResource, datasetModel);
             dataset.commit();
         } catch(Exception e) {
             e.printStackTrace();

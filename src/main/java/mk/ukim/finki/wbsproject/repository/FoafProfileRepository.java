@@ -8,11 +8,9 @@ import java.util.Set;
 
 public interface FoafProfileRepository {
 
-    Optional<String> getPersonalProfileDocumentModel(String personalProfileDocumentUri);
+    Optional<String> getPersonalProfileDocument(String personalProfileDocumentUri);
 
-    Optional<PersonDto> getPersonByUri(String personUri);
-
-    Optional<PersonDto> getPerson(String email, String hashedEmail);
+    Optional<PersonDto> getPerson(String personUri);
 
     Set<PersonDto.Friend> getFriends(List<String> friendProfileUris);
 

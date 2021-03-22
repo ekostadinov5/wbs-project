@@ -1,14 +1,8 @@
 
 ###
 
-GET http://localhost:8080/api/foaf/profile/uri
-personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
-
-###
-
 GET http://localhost:8080/api/foaf/profile
-email:mailto:ekostadinov5@gmail.com
-hashedEmail:0b742b32a87955df1e1808c644e4847d2c7825db
+personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
 
 ###
 
@@ -57,10 +51,6 @@ personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847
 DELETE http://localhost:8080/api/foaf/profile
 email:ekostadinov5@gmail.com
 personUri:http://localhost:8080/foaf/profile/rdf/0b742b32a87955df1e1808c644e4847d2c7825db#me
-
-###
-
-GET http://localhost:8080/api/foaf/profile/confirm?token=token
 
 ###
 

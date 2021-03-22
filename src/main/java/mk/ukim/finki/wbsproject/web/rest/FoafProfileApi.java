@@ -5,6 +5,7 @@ import mk.ukim.finki.wbsproject.service.EmailSenderService;
 import mk.ukim.finki.wbsproject.service.FoafProfileService;
 import org.apache.jena.query.*;
 import org.apache.jena.tdb.TDBFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.*;
@@ -17,21 +18,17 @@ import java.util.Set;
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping(path = "/api/foaf/profile", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
 public class FoafProfileApi {
+    @Value("${app.wbs-project.frontend-endpoint}")
+    private String FRONTEND_ENDPOINT;
     private final FoafProfileService foafProfileService;
 
     public FoafProfileApi(FoafProfileService foafProfileService) {
         this.foafProfileService = foafProfileService;
     }
 
-    @GetMapping(path = "/uri")
-    public PersonDto getPerson(@RequestHeader String personUri) {
-        return this.foafProfileService.getPersonByUri(personUri);
-    }
-
     @GetMapping
-    public PersonDto getPerson(@RequestHeader String email,
-                               @RequestHeader String hashedEmail) {
-        return this.foafProfileService.getPerson(email, hashedEmail);
+    public PersonDto getPerson(@RequestHeader String personUri) {
+        return this.foafProfileService.getPerson(personUri);
     }
 
     @GetMapping("/friend")
@@ -61,12 +58,12 @@ public class FoafProfileApi {
 
     @GetMapping(path = "/confirm")
     public void confirm(@RequestParam String token,
-                        @RequestParam String email,
+                        @RequestParam String b64e,
                         HttpServletResponse response) {
         this.foafProfileService.confirm(token);
-        String locationHeader = "http://localhost:3000";
-        if (!email.isEmpty()) {
-            locationHeader += "/profile/mailto:" + email;
+        String locationHeader = FRONTEND_ENDPOINT;
+        if (!b64e.isEmpty()) {
+            locationHeader += "/profile/" + b64e;
         }
         response.setHeader("Location", locationHeader);
         response.setStatus(302);

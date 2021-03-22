@@ -36,6 +36,10 @@ public class ConfirmationToken {
         this.valid = true;
     }
 
+    public Boolean isValid() {
+        return valid;
+    }
+
     public Type getType() {
         if (this.personUri == null && this.rdf == null) {
             throw new InvalidTokenException();

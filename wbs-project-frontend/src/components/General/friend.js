@@ -6,15 +6,16 @@ const Friend = (props) => {
 
     const redirect = (e) => {
         e.preventDefault();
-        if (props.friend.friendUri.startsWith("http://localhost:8080/foaf/profile/rdf/")) {
-            const hashedEmail = props.friend.friendUri.slice(39);
+        const localUriPrefix = process.env.REACT_APP_BACKEND_ENDPOINT + "/foaf/profile/rdf/";
+        if (props.friend.friendUri.startsWith(localUriPrefix)) {
+            const hashedEmail = props.friend.friendUri.slice(props.friend.friendUri.length - 40);
             history.push("/friend/profile/" + hashedEmail);
         } else {
             window.open(props.friend.friendUri, "_blank");
         }
     }
 
-    return (
+    return props.friend.firstName ? (
         <div className="col-6 col-sm-4 col-lg-3 mb-4">
             <a href={props.friend.friendUri} className="text-decoration-none" onClick={redirect}>
                 <div className="card">
@@ -33,7 +34,7 @@ const Friend = (props) => {
                 </div>
             </a>
         </div>
-    );
+    ) : null;
 }
 
 export default Friend;

@@ -18,12 +18,11 @@ const BackToTop = () =>{
 
     window.addEventListener('scroll', checkScroll)
 
-    return (
-        <button className="scrollTop btn btn-secondary" onClick={ backToTop }
-                style={{ display: showScroll ? 'flex' : 'none'}}>
+    return showScroll ? (
+        <button className="scrollTop btn btn-secondary" onClick={ backToTop }>
             <i className="fa fa-2x fa-arrow-up" />
         </button>
-    );
+    ) : null;
 }
 
 export default BackToTop;

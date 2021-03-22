@@ -1,18 +1,10 @@
 import axios from '../custom-axios/axios';
 
 const FoafProfileRepository = {
-    getPersonByUri: (personUri) => {
-        return axios.get("/api/foaf/profile/uri", {
-            headers: {
-                personUri: personUri
-            }
-        });
-    },
-    getPerson: (email, hashedEmail) => {
+    getPerson: (personUri) => {
         return axios.get("/api/foaf/profile", {
             headers: {
-                email: email,
-                hashedEmail: hashedEmail
+                personUri: personUri
             }
         });
     },
