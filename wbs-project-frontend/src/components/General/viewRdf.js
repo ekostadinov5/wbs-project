@@ -1,16 +1,39 @@
 import React, {useEffect, useState} from "react";
-import {useHistory} from "react-router-dom";
+import {useHistory, useParams} from "react-router-dom";
 import ShowRdf from "./showRdf";
 import {generateRdf} from "./utils";
+import FoafProfileRepository from "../../repository/axiosFoafProfileRepository";
 
 const ViewRdf = (props) => {
     const [rdf, setRdf] = useState();
 
+    const {base64Email, hashedEmail} = useParams();
+
     const history = useHistory();
 
     useEffect(() => {
+        const sha1 = require('sha1');
+
         if (!props.person || !props.person.firstName) {
-            history.push("/");
+            let personUri = "", hashedEmailLocal = hashedEmail;
+            if (!hashedEmailLocal) {
+                let email = "";
+                try {
+                    email = atob(base64Email);
+                } catch (e) {
+                    history.push("/");
+                }
+                hashedEmailLocal = sha1(email);
+            }
+            personUri = process.env.REACT_APP_BACKEND_ENDPOINT + "/foaf/profile/rdf/" + hashedEmailLocal + "#me";
+            FoafProfileRepository.getPerson(personUri).then(promise => {
+                setRdf(generateRdf({
+                    ...promise.data,
+                    personalProfileDocumentUri: promise.data.uri.slice(0, promise.data.uri.length - 3)
+                }));
+            }).catch(() => {
+                history.push("/");
+            });
         } else {
             setRdf(generateRdf(props.person));
         }

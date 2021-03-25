@@ -135,21 +135,22 @@ const App = () => {
                                  setCurrentPersonFriendsLoading={setCurrentPersonFriendsLoading}
                                  reset={resetCurrentPerson}
                                  deleteFoafProfile={deleteFoafProfile}/>}/>
-                    <Route path="/viewPersonRdf" exact render={() =>
+                    <Route path="/:base64Email/viewPersonRdf" exact render={() =>
                         <ViewRdf person={currentLoadedPerson}/>}/>
-                    <Route path="/edit" exact render={() =>
+                    <Route path="/:base64Email/edit" exact render={() =>
                         <Edit person={currentLoadedPerson}
                               currentEditedPerson={currentEditedPerson}
+                              loadCurrentPerson={setCurrentLoadedPerson}
                               saveCurrentEditedPerson={setCurrentEditedPerson}
                               reset={resetCurrentEditedPerson}
                               editFoafProfile={editFoafProfile}/>}/>
-                    <Route path="/viewRdfEdit" exact render={() =>
+                    <Route path="/:base64Email/viewRdfEdit" exact render={() =>
                         <ViewRdfEdit currentEditedPerson={currentEditedPerson}
                                        editFoafProfile={editFoafProfile}/>}/>
                     <Route path="/friend/profile/:hashedEmail" exact render={() =>
                         <FriendProfile friend={currentFriend}
                                        loadCurrentFriend={setCurrentFriend} />}/>
-                    <Route path="/viewFriendRdf" exact render={() =>
+                    <Route path="/:hashedEmail/viewFriendRdf" exact render={() =>
                         <ViewRdf person={currentFriend}/>}/>
                 </Router>
                 <Footer/>

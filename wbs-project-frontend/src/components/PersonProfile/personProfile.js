@@ -80,10 +80,12 @@ const PersonProfile = (props) => {
                             onClick={copyPersonalProfileDocumentUri}>
                         <i className="fa fa-copy"/>
                     </button>
-                    <Link to="/viewPersonRdf" className="btn btn-outline-dark mb-2 ml-2" title="View RDF">
+                    <Link to={"/" + base64Email + "/viewPersonRdf"} className="btn btn-outline-dark mb-2 ml-2"
+                          title="View RDF">
                         <i className="fa fa-code"/>
                     </Link>
-                    <Link to="/edit" className="btn btn-outline-dark mb-2 ml-2" title="Edit">
+                    <Link to={"/" + base64Email + "/edit"} className="btn btn-outline-dark mb-2 ml-2"
+                          title="Edit">
                         <i className="fa fa-edit"/>
                     </Link>
                     <button className="btn btn-outline-dark mb-2 ml-2" title="Delete"

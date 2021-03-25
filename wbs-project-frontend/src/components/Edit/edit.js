@@ -1,21 +1,46 @@
 import React, {useEffect, useState} from "react";
-import {useHistory} from "react-router-dom";
+import {useHistory, useParams} from "react-router-dom";
 import {Modal} from "react-bootstrap";
 import PersonForm from "../General/personForm";
 import {getPerson, generateRdf, personValidationMessage} from "../General/utils";
+import FoafProfileRepository from "../../repository/axiosFoafProfileRepository";
 
 const Edit = (props) => {
     const [person, setPerson] = useState();
     const [message, setMessage] = useState("");
     const [showMessage, setShowMessage] = useState(false);
 
+    const {base64Email} = useParams();
+
     const history = useHistory();
 
     useEffect(() => {
+        const sha1 = require('sha1');
+
         if (!props.person) {
-            history.push("/");
+            let email = "";
+            try {
+                email = atob(base64Email);
+            } catch (e) {
+                history.push("/");
+            }
+            const hashedEmail = sha1(email);
+            const personUri = process.env.REACT_APP_BACKEND_ENDPOINT + "/foaf/profile/rdf/" + hashedEmail + "#me";
+            FoafProfileRepository.getPerson(personUri).then(promise => {
+                const p = {
+                    ...promise.data,
+                    email: email,
+                    personalProfileDocumentUri: promise.data.uri.slice(0, promise.data.uri.length - 3),
+                    hashEmail: !!promise.data.hashedEmail
+                };
+                props.loadCurrentPerson(p);
+                setPerson(p);
+            }).catch(() => {
+                history.push("/");
+            });
+        } else {
+            setPerson(props.currentEditedPerson ? props.currentEditedPerson : props.person);
         }
-        setPerson(props.currentEditedPerson ? props.currentEditedPerson : props.person);
     }, [props]);
 
     const generateAndShowRdf = () => {
@@ -31,7 +56,7 @@ const Edit = (props) => {
         currentPerson.personalProfileDocumentUri = personalProfileDocumentUri;
         currentPerson.uri = personUri;
         props.saveCurrentEditedPerson(currentPerson);
-        history.push("/viewRdfEdit");
+        history.push("/" + base64Email + "/viewRdfEdit");
     }
 
     const editFoafProfile = () => {

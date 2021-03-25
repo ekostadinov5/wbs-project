@@ -57,7 +57,8 @@ const FriendProfile = (props) => {
                             onClick={copyPersonalProfileDocumentUri}>
                         <i className="fa fa-copy"/>
                     </button>
-                    <Link to="/viewFriendRdf" className="btn btn-outline-dark mb-2 ml-2" title="View RDF">
+                    <Link to={"/" + hashedEmail + "/viewFriendRdf"} className="btn btn-outline-dark mb-2 ml-2"
+                          title="View RDF">
                         <i className="fa fa-code"/>
                     </Link>
                     <button className="btn btn-outline-dark mb-2 ml-2" title="Back" onClick={history.goBack}>
