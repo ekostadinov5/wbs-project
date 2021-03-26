@@ -83,3 +83,12 @@ body {
   from{box-shadow: inset -3px 0 0 #888;}
   to{box-shadow: inset -3px 0 0 transparent;}
 }
+
+/* Logout */
+#superuser {
+  display: flex;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}

@@ -69,6 +69,11 @@ public class FoafProfileApi {
         response.setStatus(302);
     }
 
+    @DeleteMapping(path = "/superuser")
+    public void deletePerson(@RequestHeader String personUri) {
+        this.foafProfileService.deletePerson(personUri);
+    }
+
     // For testing
     @GetMapping(path = "/print")
     public void printDatasetModel() {

@@ -35,8 +35,14 @@ const FoafProfileRepository = {
     deleteFoafProfile: (email, personUri) => {
         return axios.delete("/api/foaf/profile", {
             headers: {
-                'Content-Type': 'application/json',
                 email: email,
+                personUri: personUri
+            }
+        });
+    },
+    deleteFoafProfileSuperuser: (personUri) => {
+        return axios.delete("/api/foaf/profile/superuser", {
+            headers: {
                 personUri: personUri
             }
         });
