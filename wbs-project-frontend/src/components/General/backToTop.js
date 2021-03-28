@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const BackToTop = () =>{
-
     const [showScroll, setShowScroll] = useState(false)
 
     const backToTop = () =>{
@@ -19,7 +18,7 @@ const BackToTop = () =>{
     window.addEventListener('scroll', checkScroll)
 
     return showScroll ? (
-        <button className="scrollTop btn btn-secondary" onClick={ backToTop }>
+        <button className="scrollTop btn btn-secondary" onClick={backToTop}>
             <i className="fa fa-2x fa-arrow-up" />
         </button>
     ) : null;

@@ -1,0 +1,46 @@
+version: "3"
+services:
+  db:
+    image: "postgres"
+    container_name: "postgres"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wbs_project
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-db-data:/var/lib/postgresql/data
+
+  backend:
+    image: "wbs-project-backend"
+    container_name: "wbs-project-backend"
+    environment:
+      - PORT=8080
+      - BACKEND_ENDPOINT=https://421c5a06210b.ngrok.io/be
+      - FRONTEND_ENDPOINT=https://421c5a06210b.ngrok.io
+      - DB_HOSTNAME=db
+      - DB_PORT=5432
+      - DB_DATABASE=wbs_project
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=ekostadinov5@gmail.com
+      - MAIL_PASSWORD=ittzzrgwegdlwrhs
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    container_name: "wbs-project-frontend"
+    build:
+      context: .
+      dockerfile: wbs-project-frontend/Dockerfile
+      args:
+        - REACT_APP_BACKEND_ENDPOINT=https://421c5a06210b.ngrok.io/be
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
